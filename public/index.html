@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Info da Máquina</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100">
+  <div class="container mx-auto px-4 py-8">
+    <div class="max-w-4xl mx-auto">
+      <h1 class="text-4xl font-bold mb-8 text-center text-gray-800">Info da Máquina</h1>
+      
+      <div id="info" class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-8"></div>
+      
+      <div id="systemInfo" class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-8"></div>
+      
+      <div id="diskWarning" class="hidden bg-red-500 text-white p-4 mb-8 rounded text-center font-bold">
+        Atenção, parça! Teu disco tá quase lotado!
+      </div>
+      
+      <div class="flex justify-center space-x-4 mb-8">
+        <button id="clickBtn" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition duration-300 ease-in-out transform hover:scale-105">
+          Clica aqui, mano!
+        </button>
+        <button id="logoutBtn" class="bg-red-500 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-lg transition duration-300 ease-in-out transform hover:scale-105">
+          Sair
+        </button>
+      </div>
+      
+      <div class="bg-white shadow-md rounded p-4 mb-8">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-2xl font-bold text-center">Contador de Clicks</h2>
+          <button id="updateChartBtn" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300 ease-in-out transform hover:scale-105">
+            Atualizar Gráfico
+          </button>
+        </div>
+        <div class="w-full" style="height: 300px;">
+          <canvas id="clickChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    let clickChart;
+
+    function updateSystemInfo() {
+      fetch('/system-info')
+        .then(response => response.json())
+        .then(data => {
+          document.getElementById('systemInfo').innerHTML = `
+            <h2 class="text-2xl font-bold mb-4">Uso do Sistema</h2>
+            <p class="mb-2"><strong>CPU:</strong> ${data.cpuUsage.toFixed(2)}%</p>
+            <p><strong>Memória:</strong> ${data.memUsage.toFixed(2)}%</p>
+          `;
+        });
+    }
+
+    function checkDiskUsage() {
+      fetch('/disk-usage')
+        .then(response => response.json())
+        .then(data => {
+          const warningElement = document.getElementById('diskWarning');
+          warningElement.classList.toggle('hidden', !data.warning);
+        });
+    }
+
+    function updateClickChart() {
+      fetch('/clicks')
+        .then(response => response.json())
+        .then(data => {
+          if (clickChart) {
+            clickChart.data.labels = data.map(d => new Date(d.click_date).toLocaleString());
+            clickChart.data.datasets[0].data = data.map(d => d.count);
+            clickChart.update();
+          } else {
+            const ctx = document.getElementById('clickChart').getContext('2d');
+            clickChart = new Chart(ctx, {
+              type: 'line',
+              data: {
+                labels: data.map(d => new Date(d.click_date).toLocaleString()),
+                datasets: [{
+                  label: 'Clicks',
+                  data: data.map(d => d.count),
+                  borderColor: 'rgb(75, 192, 192)',
+                  tension: 0.1,
+                  fill: false
+                }]
+              },
+              options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                  x: {
+                    ticks: {
+                      maxRotation: 0,
+                      minRotation: 0,
+                      autoSkip: true,
+                      maxTicksLimit: 10
+                    }
+                  }
+                },
+                plugins: {
+                  legend: {
+                    display: false
+                  }
+                }
+              }
+            });
+          }
+        });
+    }
+
+    fetch('/info')
+      .then(response => response.json())
+      .then(data => {
+        const infoDiv = document.getElementById('info');
+        infoDiv.innerHTML = `
+          <h2 class="text-2xl font-bold mb-4">Informações do Sistema</h2>
+          <p class="mb-2"><strong>Hostname:</strong> ${data.hostname}</p>
+          <p class="mb-2"><strong>IP:</strong> ${data.ip}</p>
+          <p><strong>Espaço em Disco:</strong> ${(data.diskSpace / 1024 / 1024 / 1024).toFixed(2)} GB</p>
+        `;
+      });
+
+    document.getElementById('clickBtn').addEventListener('click', () => {
+      fetch('/click', { method: 'POST' })
+        .then(() => {
+          alert('Clique registrado, parça!');
+          updateClickChart();
+        })
+        .catch(() => alert('Ops, deu ruim no registro!'));
+    });
+
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+      fetch('/logout')
+        .then(() => window.location.href = '/login')
+        .catch(() => alert('Ops, deu ruim no logout!'));
+    });
+
+    document.getElementById('updateChartBtn').addEventListener('click', updateClickChart);
+
+    setInterval(updateSystemInfo, 5000);
+    setInterval(checkDiskUsage, 60000);
+    updateSystemInfo();
+    checkDiskUsage();
+    updateClickChart();
+  </script>
+</body>
+</html>

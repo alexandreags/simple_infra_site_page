@@ -1,0 +1,12 @@
+CREATE DATABASE IF NOT EXISTS click_tracker;
+USE click_tracker;
+CREATE TABLE clicks (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    ip VARCHAR(45) NOT NULL,
+    click_date DATETIME NOT NULL
+);
+CREATE TABLE users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(50) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL
+);
