@@ -50,6 +50,10 @@ E aí, galera! Bem-vindos ao **Máquina Info**, o app mais descolado pra ficar d
    ```
    create_table.sql
    ```
+6. Rodar o script create_user.js para criar um usuario padrao (admin/password) 
+    ```
+    node create_user.js
+    ```
 
 7. Bota pra rodar:
    ```
