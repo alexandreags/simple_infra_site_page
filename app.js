@@ -183,6 +183,27 @@ app.get('/clicks', ensureAuthenticated, (req, res) => {
   });
 });
 
+// Rota protegida para obter ultimo clique
+app.get('/lastclick', ensureAuthenticated, (req, res) => {
+  const query = `
+    select click_date from clicks
+order by id DESC LIMIT 1;
+  `;
+  pool.query(query, (error, results) => {
+    if (error) {
+      console.error('Erro ao pegar o ultimo click:', error);
+      return res.status(500).send('Deu ruim pra pegar o ultimo clique');
+    }
+    
+    if (results.length === 0) {
+      return res.status(404).send('Nenhum clique encontrado');
+    }
+
+    const formattedResults = results[0].click_date;
+    res.json(formattedResults);
+  });
+});
+
 // Rota protegida para informações do sistema
 app.get('/system-info', ensureAuthenticated, async (req, res) => {
   try {

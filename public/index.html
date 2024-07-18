@@ -18,6 +18,16 @@
       <div id="diskWarning" class="hidden bg-red-500 text-white p-4 mb-8 rounded text-center font-bold">
         Atenção, parça! Teu disco tá quase lotado!
       </div>
+
+      <div id="lastclickGroup" class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-8">
+        <div class="flex justify-center space-x-4 mb-8">
+          <button id="updateLastClick" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300 ease-in-out transform hover:scale-105">
+            Atualizar Ultimo Click
+          </button>
+        </div>
+        <div id="lastclick" class="flex justify-center space-x-4 mb-8">
+        </div>
+      </div>
       
       <div class="flex justify-center space-x-4 mb-8">
         <button id="clickBtn" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition duration-300 ease-in-out transform hover:scale-105">
@@ -113,6 +123,16 @@
         });
     }
 
+    function updateLastClick() {
+      fetch('/lastclick')
+        .then(response => response.json())
+        .then(data => {
+          document.getElementById('lastclick').innerHTML = `
+            <h2 class="text-2xl font-bold mb-4">Ultimo Clique:</h2><br>
+            <p class="mb-2"><strong> ${data}</strong></p>
+          `;
+        });
+    }
     fetch('/info')
       .then(response => response.json())
       .then(data => {
@@ -141,12 +161,15 @@
     });
 
     document.getElementById('updateChartBtn').addEventListener('click', updateClickChart);
+    //updateLastClick
+    document.getElementById('updateLastClick').addEventListener('click', updateLastClick);
 
     setInterval(updateSystemInfo, 5000);
     setInterval(checkDiskUsage, 60000);
     updateSystemInfo();
     checkDiskUsage();
     updateClickChart();
+    updateLastClick();
   </script>
 </body>
 </html>
